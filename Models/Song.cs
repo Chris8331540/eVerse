@@ -10,11 +10,14 @@ namespace eVerse.Models
     {
 
         public int Id { get; set; }
-        public string Title { get; set; }
+        public string Title { get; set; } = string.Empty;
         public int SongNumber { get; set; }
 
         //property navigation to Verses
         public ICollection<Verse> Verses { get; set; } = new List<Verse>();
 
+        // Per-song settings
+        public Setting? Setting { get; set; }
+        public int? SettingId { get; set; }
     }
 }
