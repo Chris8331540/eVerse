@@ -1,0 +1,76 @@
+﻿<UserControl x:Class="eVerse.Views.CreateSongView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d">
+
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Cabecera -->
+            <RowDefinition Height="*"/>
+            <!-- Scrollable -->
+            <RowDefinition Height="Auto"/>
+            <!-- Botones sticky -->
+        </Grid.RowDefinitions>
+
+        <!-- CABECERA -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
+            <ui:TextBox Text="{Binding SongNumber}" Width="80"
+                        PlaceholderText="Número" Margin="0 0 5 0"/>
+
+            <ui:TextBox Text="{Binding SongName}" Width="337"
+                        PlaceholderText="Título"/>
+        </StackPanel>
+
+        <!-- ZONA SCROLLEABLE: Estrofas -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <ItemsControl ItemsSource="{Binding Verses}" Margin="0 10 0 10">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <UniformGrid Columns="2" Margin="0 0 0 10">
+
+                            <!-- TEXTO DE ESTROFA -->
+                            <ui:TextBox 
+                                AcceptsReturn="True"
+                                AcceptsTab="True"
+                                TextWrapping="Wrap"
+                                VerticalScrollBarVisibility="Auto"
+                                HorizontalScrollBarVisibility="Auto"
+                                MinHeight="80"
+                                VerticalAlignment="Stretch"
+                                Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                PlaceholderText="Texto de la estrofa"
+                                Margin="0 10 10 0"/>
+
+                            <!-- BOTÓN ELIMINAR -->
+                            <ui:Button
+                                Margin="0 10 10 0"
+                                Content="X"
+                                Appearance="Secondary"
+                                MinWidth="40"
+                                VerticalAlignment="Stretch"
+                                Command="{Binding DataContext.RemoveVerseCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                CommandParameter="{Binding}" />
+                        </UniformGrid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+
+        <!-- BOTONES STICKY ABAJO -->
+        <StackPanel Grid.Row="2" Orientation="Vertical" VerticalAlignment="Bottom">
+            <ui:Button Content="+ Añadir Estrofa"
+                       Command="{Binding AddVerseCommand}"
+                       Width="180" Height="36"
+                       Margin="0 0 0 5"/>
+
+            <ui:Button Content="Guardar Canción"
+                       Command="{Binding SaveSongCommand}"
+                       Width="180" Height="36"/>
+        </StackPanel>
+
+    </Grid>
+</UserControl>

@@ -1,0 +1,21 @@
+﻿<Window x:Class="eVerse.Views.ProjectionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        WindowStyle="None"
+        AllowsTransparency="False"
+        Background="Black"
+        ShowInTaskbar="False"
+        Topmost="True"
+        KeyDown="Window_KeyDown"
+        >
+    <Grid x:Name="RootGrid" Background="Black">
+        <Viewbox x:Name="RootViewbox" Stretch="Uniform" StretchDirection="DownOnly">
+            <TextBlock x:Name="ProjectedText"
+                       TextWrapping="Wrap"
+                       TextAlignment="Center"
+                       Foreground="White"
+                       FontWeight="SemiBold"
+                       />
+        </Viewbox>
+    </Grid>
+</Window>
