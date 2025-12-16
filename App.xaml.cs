@@ -25,14 +25,16 @@ namespace eVerse
 
             // Registrar servicios
             services.AddSingleton<SongService>();
+            services.AddSingleton<SettingsService>();
+
+            // ProjectionSettings requiere SettingsService en constructor
+            services.AddSingleton<ProjectionSettings>();
             services.AddSingleton<ProjectionService>();
 
             // Registrar ViewModels
             services.AddTransient<CreateSongViewModel>();
             services.AddSingleton<MainWindowViewModel>();
             services.AddTransient<SongListViewModel>();
-            services.AddSingleton<ProjectionSettings>();
-            
 
             // Registrar Views
             services.AddTransient<CreateSongView>();

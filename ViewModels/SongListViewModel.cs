@@ -62,9 +62,11 @@ namespace eVerse.ViewModels
             LoadSongs();
         }
 
-
-
-
+        partial void OnSelectedSongChanged(Song? oldValue, Song? newValue)
+        {
+            // Update ProjectionSettings SongId so per-song settings are loaded/saved
+            _projectionSettings.SongId = newValue?.Id;
+        }
 
         // Cargar canciones desde la BD
         [RelayCommand]
@@ -91,21 +93,6 @@ namespace eVerse.ViewModels
             return SelectedSong != null;
         }
 
-        //// Navegar a pantalla de edición
-        //[RelayCommand(CanExecute = nameof(CanEdit))]
-        //private void EditSong()
-        //{
-        //    if (SelectedSong == null) return;
-
-        //    // Ejemplo: cargar CreateSongView con VM y datos
-        //    var vm = _serviceProvider.GetRequiredService<CreateSongViewModel>();
-        //    vm.LoadFromSong(SelectedSong); // Este método lo puedes crear fácilmente
-
-        //    // Cambiar vista dentro del MainWindow (si usas navegación MVVM)
-        //    // Suponiendo que tienes un MainWindowViewModel con CurrentView
-        //    var mainVM = _serviceProvider.GetRequiredService<MainWindowViewModel>();
-        //    mainVM.CurrentView = new eVerse.Views.CreateSongView { DataContext = vm };
-        //}
 
         [RelayCommand]
         private void ShowVerse(string verseText)
