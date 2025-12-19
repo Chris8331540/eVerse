@@ -29,7 +29,6 @@ namespace eVerse.Services
 
         private readonly int _port;
         private readonly string _token;
-        private readonly string _hostname = "iellaurel"; // instance name
         private readonly string _domain = "local"; // standard mDNS domain
 
         public string Address { get; private set; }
@@ -42,10 +41,11 @@ namespace eVerse.Services
         {
             _port = port;
             _token = token;
-            // Determine local IP
+            // Determine local IP and hostname
             LocalIp = GetLocalIp();
-            // Expose the mDNS name as the canonical address and fallback to ip
-            Address = LocalIp != null ? $"http://{_hostname}.{_domain}:{_port} (http://{LocalIp}:{_port})" : $"http://{_hostname}.{_domain}:{_port}";
+            var realHost = Dns.GetHostName();
+            // Expose the machine mDNS name (hostname.local) and fallback to ip
+            Address = LocalIp != null ? $"http://{realHost}.{_domain}:{_port} (http://{LocalIp}:{_port})" : $"http://{realHost}.{_domain}:{_port}";
             MdnsPublished = false;
         }
 
@@ -164,26 +164,38 @@ namespace eVerse.Services
             try
             {
                 System.Diagnostics.Debug.WriteLine("KestrelWebSocketService: Attempting to start mDNS advertisement...");
+
+                // Start multicast first (ensures socket opened)
                 _multicast = new MulticastService();
+                _multicast.Start(); // IMPORTANT: start before creating ServiceDiscovery
+                System.Diagnostics.Debug.WriteLine("KestrelWebSocketService: MulticastService started.");
+
                 _sd = new ServiceDiscovery(_multicast);
-                // Advertise an HTTP service under the chosen hostname (iellaurel.local)
-                var profile = new ServiceProfile(_hostname, "_http._tcp", (ushort)_port);
-                // Try to set HostName via reflection if property exists
+
+                // Use machine hostname as service instance name
+                var instanceName = Dns.GetHostName();
+
+                // Create profile and set explicit host name (hostname.local)
+                var profile = new ServiceProfile(instanceName, "_http._tcp", (ushort)_port);
+
                 try
                 {
-                    var hostProp = profile.GetType().GetProperty("HostName");
-                    if (hostProp != null && hostProp.CanWrite)
-                    {
-                        hostProp.SetValue(profile, _hostname + ".local");
-                    }
+                    var hostName = instanceName.Trim() + ".local";
+                    profile.HostName = new DomainName(hostName);
+                    System.Diagnostics.Debug.WriteLine($"KestrelWebSocketService: Set profile.HostName = {hostName}");
                 }
-                catch { }
-                _sd.Advertise(profile);
-                _multicast.Start();
-                MdnsPublished = true;
-                System.Diagnostics.Debug.WriteLine("KestrelWebSocketService: mDNS advertised as " + _hostname + "." + _domain + ":" + _port);
+                catch (Exception exHost)
+                {
+                    System.Diagnostics.Debug.WriteLine("KestrelWebSocketService: Failed to set HostName: " + exHost.Message);
+                }
 
-                // Additional diagnostics: list network interfaces and IPv4 addresses
+                // Advertise service profile (PTR/SRV/TXT)
+                _sd.Advertise(profile);
+                MdnsPublished = true;
+                System.Diagnostics.Debug.WriteLine("KestrelWebSocketService: ServiceProfile advertised; using machine hostname.");
+                System.Diagnostics.Debug.WriteLine("KestrelWebSocketService: mDNS advertised as " + instanceName + ".local:" + _port);
+
+                // Diagnostics: list network interfaces and IPv4 addresses
                 try
                 {
                     var nics = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
