@@ -86,6 +86,14 @@ namespace eVerse.ViewModels
                 var ordered = newValue.Verses?.OrderBy(v => v.Order).ToList() ?? new List<Verse>();
                 SelectedSongVerses = new ObservableCollection<Verse>(ordered);
             }
+
+            // Force command CanExecute re-evaluation so AddVerse button updates enabled state
+            try
+            {
+                if (AddVerseCommand is IRelayCommand relay)
+                    relay.NotifyCanExecuteChanged();
+            }
+            catch { }
         }
 
         // Cargar canciones desde la BD
@@ -177,7 +185,7 @@ namespace eVerse.ViewModels
                 SelectedSong = kept;
 
             // Informar al usuario
-            System.Windows.MessageBox.Show("Cambios guardados correctamente.", "Información", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            System.Windows.MessageBox.Show("Cambios guardados correctamente.", "Información", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
 
