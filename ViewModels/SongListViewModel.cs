@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Data;
 
 namespace eVerse.ViewModels
@@ -46,6 +47,14 @@ namespace eVerse.ViewModels
         [ObservableProperty]
         private Song? selectedSong;
 
+        // Versos de la canción seleccionada (colección observable para editar visualmente)
+        private ObservableCollection<Verse>? _selectedSongVerses;
+        public ObservableCollection<Verse>? SelectedSongVerses
+        {
+            get => _selectedSongVerses;
+            private set => SetProperty(ref _selectedSongVerses, value);
+        }
+
         // Lista de fuentes disponibles (simple ejemplo)
         public ObservableCollection<string> AvailableFonts { get; } = new ObservableCollection<string>
     {
@@ -66,6 +75,17 @@ namespace eVerse.ViewModels
         {
             // Update ProjectionSettings SongId so per-song settings are loaded/saved
             _projectionSettings.SongId = newValue?.Id;
+
+            // Populate observable verses collection for editing in the UI
+            if (newValue == null)
+            {
+                SelectedSongVerses = null;
+            }
+            else
+            {
+                var ordered = newValue.Verses?.OrderBy(v => v.Order).ToList() ?? new List<Verse>();
+                SelectedSongVerses = new ObservableCollection<Verse>(ordered);
+            }
         }
 
         // Cargar canciones desde la BD
@@ -93,6 +113,25 @@ namespace eVerse.ViewModels
             return SelectedSong != null;
         }
 
+        // Añadir estrofa visualmente a la canción seleccionada
+        [RelayCommand(CanExecute = nameof(CanEdit))]
+        private void AddVerse()
+        {
+            if (SelectedSong == null) return;
+            if (SelectedSongVerses == null) SelectedSongVerses = new ObservableCollection<Verse>();
+            SelectedSongVerses.Add(new Verse { Text = string.Empty, Order = (SelectedSongVerses.Count +1) });
+        }
+
+        // Eliminar estrofa visualmente (no persiste hasta guardar)
+        [RelayCommand]
+        private void RemoveVerse(Verse verse)
+        {
+            if (SelectedSongVerses == null || verse == null) return;
+            SelectedSongVerses.Remove(verse);
+            // Recompute orders
+            for (int i =0; i < SelectedSongVerses.Count; i++)
+                SelectedSongVerses[i].Order = i +1;
+        }
 
         [RelayCommand]
         private void ShowVerse(string verseText)
@@ -114,6 +153,18 @@ namespace eVerse.ViewModels
         {
             if (song == null) return;
 
+            // Si usamos SelectedSongVerses, sincronizar antes de guardar
+            if (SelectedSongVerses != null)
+            {
+                song.Verses = SelectedSongVerses.Select(v => new Verse
+                {
+                    Id = v.Id,
+                    Text = v.Text,
+                    Order = v.Order,
+                    SongId = song.Id
+                }).ToList();
+            }
+
             // Usa el servicio para actualizar la entidad en la base de datos
             _songService.UpdateSong(song);
 
@@ -124,6 +175,9 @@ namespace eVerse.ViewModels
             var kept = Songs.FirstOrDefault(s => s.Id == song.Id);
             if (kept != null)
                 SelectedSong = kept;
+
+            // Informar al usuario
+            System.Windows.MessageBox.Show("Cambios guardados correctamente.", "Información", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         }
 
 

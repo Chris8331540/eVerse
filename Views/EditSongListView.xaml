@@ -114,45 +114,56 @@
                                      FontWeight="Bold"
                                      VerticalAlignment="Center" />
 
-                        <Button Grid.Column="1"
-                                Content="Guardar"
-                                Margin="10,0,0,0"
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button
+                                Content="Añadir Estrofa"
+                                Margin="0,0,10,0"
                                 Padding="10,4"
                                 VerticalAlignment="Center"
-                                x:Name="SaveSongButton"
-                                Command="{Binding SaveSongCommand}"
-                                CommandParameter="{Binding SelectedSong}" />
+                                Command="{Binding AddVerseCommand}" />
+
+                            <Button Grid.Column="1"
+                                    Content="Guardar"
+                                    Margin="0,0,0,0"
+                                    Padding="10,4"
+                                    VerticalAlignment="Center"
+                                    x:Name="SaveSongButton"
+                                    Command="{Binding SaveSongCommand}"
+                                    CommandParameter="{Binding SelectedSong}" />
+                        </StackPanel>
                     </Grid>
 
                     <!-- ESTROFAS -->
                     <ScrollViewer Grid.Row="1"
                                   VerticalScrollBarVisibility="Auto">
 
-                        <ItemsControl ItemsSource="{Binding SelectedSong.Verses}">
+                        <ItemsControl ItemsSource="{Binding SelectedSongVerses}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Button 
-                                        Margin="0 0 0 10"
-                                        Background="Transparent"
-                                        BorderBrush="{x:Null}"
-                                        Padding="0"
-                                        HorizontalAlignment="Stretch"
-                                        HorizontalContentAlignment="Stretch">
+                                    <UniformGrid Columns="2" Margin="0 0 0 10">
 
+                                        <ui:TextBox 
+                                            AcceptsReturn="True"
+                                            AcceptsTab="True"
+                                            TextWrapping="Wrap"
+                                            VerticalScrollBarVisibility="Auto"
+                                            HorizontalScrollBarVisibility="Auto"
+                                            MinHeight="80"
+                                            VerticalAlignment="Stretch"
+                                            Text="{Binding Text, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                            PlaceholderText="Texto de la estrofa"
+                                            Margin="0 10 0 10"/>
 
-                                        <ui:Card Margin="0 0 0 0" Padding="10">
-                                            <StackPanel>
-                                                <ui:TextBlock Text="Estrofa"
-                                                              FontWeight="Bold"
-                                                              Margin="0 0 0 5"
-                                                              HorizontalAlignment="Stretch" />
-                                                <ui:TextBox Text="{Binding Text}"
-                                                              TextWrapping="Wrap"
-                                                              HorizontalAlignment="Stretch" />
-                                            </StackPanel>
-                                        </ui:Card>
+                                        <ui:Button
+                                            Margin="0 10 0 10"
+                                            Content="X"
+                                            Appearance="Secondary"
+                                            MinWidth="40"
+                                            VerticalAlignment="Stretch"
+                                            Command="{Binding DataContext.RemoveVerseCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                            CommandParameter="{Binding}" />
 
-                                    </Button>
+                                    </UniformGrid>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
