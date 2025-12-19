@@ -35,6 +35,11 @@ namespace eVerse.Views
             InitializeComponent();
             DataContext = viewModel; // asigna el ViewModel inyectado
             viewModel.ShowMessage = msg => System.Windows.MessageBox.Show(msg, "Aviso", MessageBoxButton.OK, MessageBoxImage.Warning);
+            viewModel.AskConfirmation = prompt =>
+            {
+                var result = System.Windows.MessageBox.Show(prompt, "Confirmar", MessageBoxButton.YesNo, MessageBoxImage.Question);
+                return result == MessageBoxResult.Yes;
+            };
         }
     }
 }
