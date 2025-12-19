@@ -27,21 +27,27 @@ namespace eVerse
             services.AddSingleton<SongService>();
             services.AddSingleton<SettingsService>();
 
+            // Create and register websocket service instance
+            var wsService = new WebSocketService(port:5000, path: "/projection", token: "secret-token");
+            services.AddSingleton<IWebSocketService>(wsService);
+
             // ProjectionSettings requiere SettingsService en constructor
             services.AddSingleton<ProjectionSettings>();
+            // ProjectionService ahora requiere IWebSocketService
             services.AddSingleton<ProjectionService>();
 
             // Registrar ViewModels
             services.AddTransient<CreateSongViewModel>();
             services.AddSingleton<MainWindowViewModel>();
             services.AddTransient<SongListViewModel>();
+            services.AddTransient<WebsocketConfigViewModel>();
 
             // Registrar Views
             services.AddTransient<CreateSongView>();
             services.AddTransient<SongListView>();
             services.AddTransient<MainWindow>();
             services.AddTransient<EditSongListView>();
-            
+            services.AddTransient<WebsocketConfigView>();
 
             ServiceProvider = services.BuildServiceProvider();
 

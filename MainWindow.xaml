@@ -137,6 +137,25 @@
                         </Border>
 
 
+                        <!-- Websocket config -->
+                        <Border x:Name="WsConfigBorder" Style="{StaticResource SidebarItemStyle}" MouseLeftButtonUp="SidebarItem_MouseLeftButtonUp">
+                            <Border.InputBindings>
+                                <MouseBinding Gesture="LeftClick" Command="{Binding ShowWebsocketConfigCommand}" />
+                            </Border.InputBindings>
+                            <StackPanel Orientation="Horizontal" Style="{StaticResource SidebarInnerStackStyle}">
+                                <TextBlock FontFamily="Segoe MDL2 Assets"
+                                   Text="&#xE753;"           
+                                   FontSize="18"
+                                   Foreground="White"
+                                   VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"/>
+                                <TextBlock Text="Configuración websocket"
+                                           Margin="10 0 0 0"
+                                           VerticalAlignment="Center"
+                                           x:Name="WsConfigText"/>
+                            </StackPanel>
+                        </Border>
+
                     </StackPanel>
                 </Grid>
             </Border>

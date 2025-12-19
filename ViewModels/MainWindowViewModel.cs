@@ -16,6 +16,7 @@ namespace eVerse.ViewModels
         public ICommand ShowCreateSongCommand { get; }
         public ICommand ShowSongListCommand { get; }
         public ICommand ShowEditSongListCommand { get; }
+        public ICommand ShowWebsocketConfigCommand { get; }
 
         private object _currentView;
 
@@ -33,6 +34,7 @@ namespace eVerse.ViewModels
             ShowCreateSongCommand = new RelayCommand(ShowCreateSong);
             ShowSongListCommand = new RelayCommand(ShowSongList);
             ShowEditSongListCommand = new RelayCommand(ShowEditSongList);
+            ShowWebsocketConfigCommand = new RelayCommand(ShowWebsocketConfig);
 
             // Vista inicial
             ShowCreateSong();
@@ -51,6 +53,11 @@ namespace eVerse.ViewModels
         private void ShowEditSongList()
         {
             CurrentView = _service.GetRequiredService<EditSongListView>();
+        }
+
+        private void ShowWebsocketConfig()
+        {
+            CurrentView = _service.GetRequiredService<WebsocketConfigView>();
         }
 
 

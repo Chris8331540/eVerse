@@ -14,10 +14,12 @@ namespace eVerse.Services
     {
         private ProjectionWindow? _window;
         private readonly ProjectionSettings _settings;
+        private readonly IWebSocketService _webSocketService;
 
-        public ProjectionService(ProjectionSettings settings)
+        public ProjectionService(ProjectionSettings settings, IWebSocketService webSocketService)
         {
             _settings = settings;
+            _webSocketService = webSocketService;
 
             // Ensure projection window is closed when application exits
             if (System.Windows.Application.Current != null)
@@ -37,6 +39,13 @@ namespace eVerse.Services
                 EnsureWindowCreated();
                 _window!.SetProjectedText(text);
                 _window!.Activate(); // lleva al frente
+
+                // Broadcast to websocket clients
+                try
+                {
+                    _webSocketService.BroadcastText(text);
+                }
+                catch { }
             });
         }
 
