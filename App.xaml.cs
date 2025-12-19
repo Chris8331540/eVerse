@@ -27,9 +27,9 @@ namespace eVerse
             services.AddSingleton<SongService>();
             services.AddSingleton<SettingsService>();
 
-            // Create and register websocket service instance
-            var wsService = new WebSocketService(port:5000, path: "/projection", token: "secret-token");
-            services.AddSingleton<IWebSocketService>(wsService);
+            // Create and register kestrel websocket service instance
+            var kestrelWs = new KestrelWebSocketService(port:5000, token: "secret-token");
+            services.AddSingleton<IWebSocketService>(kestrelWs);
 
             // ProjectionSettings requiere SettingsService en constructor
             services.AddSingleton<ProjectionSettings>();

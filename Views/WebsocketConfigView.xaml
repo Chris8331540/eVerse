@@ -9,16 +9,19 @@
  <StackPanel>
  <TextBlock Text="Configuracion Websocket" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
 
- <TextBlock Text="Direccion:" FontWeight="SemiBold" />
- <TextBlock Text="{Binding WebsocketAddress}" Margin="0,0,0,10" />
+ <TextBlock Text="Direccion accesible (mDNS o IP):" FontWeight="SemiBold" />
+ <TextBlock Text="{Binding WebsocketAddress}" Margin="0,0,0,10" TextWrapping="Wrap"/>
 
  <StackPanel Orientation="Horizontal" HorizontalAlignment="Left" Margin="0,0,0,10">
  <Button Content="Iniciar servidor" Command="{Binding StartCommand}" Margin="0,0,10,0" />
  <Button Content="Detener servidor" Command="{Binding StopCommand}" />
+ <Button Content="Copiar URL" Command="{Binding CopyAddressCommand}" Margin="10,0,0,0" />
  </StackPanel>
 
  <TextBlock Text="Estado:" FontWeight="SemiBold" Margin="0,0,0,4"/>
  <TextBlock Text="{Binding IsRunningText}" />
+ <TextBlock Text="mDNS publicado:" FontWeight="SemiBold" Margin="0,8,0,0"/>
+ <TextBlock Text="{Binding MdnsPublishedText}" />
  </StackPanel>
  </Grid>
 </UserControl>

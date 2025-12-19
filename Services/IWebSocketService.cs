@@ -9,5 +9,7 @@ namespace eVerse.Services
  void Start();
  void Stop();
  bool IsRunning { get; }
+ bool MdnsPublished { get; }
+ string? LocalIp { get; }
  }
 }
