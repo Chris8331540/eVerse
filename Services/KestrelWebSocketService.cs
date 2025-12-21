@@ -335,6 +335,7 @@ namespace eVerse.Services
 </head>
 <body>
   <h1>eVerse Projection Client</h1>
+<h1>eVerse Projection Clientss</h1>
   <div id=""status"">Estado: <span id=""conn-status"">Desconectado</span></div>
   <div id=""output"">Esperando mensajes...</div>
 
@@ -354,7 +355,7 @@ namespace eVerse.Services
   const token = 'secret-token';
   const wsUrl = (function(){ const host = window.location.hostname; const port = window.location.port || '5000'; return `ws://${host}:${port}/ws?token=${token}`; })();
   let ws;
-  function connect(){ statusEl.textContent = 'Conectando...'; ws = new WebSocket(wsUrl); ws.onopen = ()=>{ statusEl.textContent = 'Conectado'; log('Conectado a '+wsUrl); }; ws.onmessage = (ev)=>{ statusEl.textContent = 'Recibiendo'; log(ev.data); }; ws.onclose = ()=>{ statusEl.textContent = 'Desconectado'; log('Desconectado'); setTimeout(connect,3000); }; ws.onerror = (e)=>{ statusEl.textContent = 'Error'; log('Error socket'); }; }
+  function connect(){ statusEl.textContent = 'Conectando...'; ws = new WebSocket(wsUrl); ws.onopen = ()=>{ statusEl.textContent = 'Conectado1'; log('Conectado a '+wsUrl); }; ws.onmessage = (ev)=>{ statusEl.textContent = 'Recibiendo'; log(ev.data); }; ws.onclose = ()=>{ statusEl.textContent = 'Desconectado'; log('Desconectado'); setTimeout(connect,3000); }; ws.onerror = (e)=>{ statusEl.textContent = 'Error'; log('Error socket'); }; }
   connect();
 })();";
                     System.IO.File.WriteAllText(jsPath, jsContent, System.Text.Encoding.UTF8);
