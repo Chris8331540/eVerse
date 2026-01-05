@@ -13,6 +13,7 @@
     </ui:FluentWindow.InputBindings>
 
     <ui:FluentWindow.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
         <Style x:Key="SidebarItemStyle" TargetType="Border">
             <Setter Property="Focusable" Value="True" />
             <Setter Property="Background" Value="Transparent" />
@@ -152,7 +153,8 @@
                                 <TextBlock Text="Configuración websocket"
                                            Margin="10 0 0 0"
                                            VerticalAlignment="Center"
-                                           x:Name="WsConfigText"/>
+                                           x:Name="WsConfigText"
+                                           Visibility="{Binding IsSidebarExpanded, RelativeSource={RelativeSource AncestorType={x:Type local:MainWindow}}, Converter={StaticResource BoolToVis}}"/>
                             </StackPanel>
                         </Border>
 

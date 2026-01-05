@@ -21,8 +21,8 @@ namespace eVerse.ViewModels
         public WebsocketConfigViewModel(IWebSocketService webSocketService)
         {
             _webSocketService = webSocketService;
-            StartCommand = new RelayCommand(() => { _webSocketService.Start(); Refresh(); });
-            StopCommand = new RelayCommand(() => { _webSocketService.Stop(); Refresh(); });
+            StartCommand = new RelayCommand(() => { _webSocketService.Start(); Refresh(); }, () => !_webSocketService.IsRunning);
+            StopCommand = new RelayCommand(() => { _webSocketService.Stop(); Refresh(); }, () => _webSocketService.IsRunning);
             CopyAddressCommand = new RelayCommand(() =>
             {
                 try { System.Windows.Clipboard.SetText(WebsocketAddress); } catch { }
@@ -35,6 +35,8 @@ namespace eVerse.ViewModels
             OnPropertyChanged(nameof(WebsocketAddress));
             OnPropertyChanged(nameof(MdnsPublishedText));
             OnPropertyChanged(nameof(LocalIp));
+            // Notify WPF to requery command CanExecute so buttons enable/disable update
+            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;

@@ -45,7 +45,7 @@ namespace eVerse.Services
             LocalIp = GetLocalIp();
             var realHost = Dns.GetHostName();
             // Expose the machine mDNS name (hostname.local) and fallback to ip
-            Address = LocalIp != null ? $"http://{realHost}.{_domain}:{_port} (http://{LocalIp}:{_port})" : $"http://{realHost}.{_domain}:{_port}";
+            Address = LocalIp != null ? $"http://{realHost}.{_domain}:{_port}": "Ha ocurrido un error, no se puede obtener la dirección";
             MdnsPublished = false;
         }
 
