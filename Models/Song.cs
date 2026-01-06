@@ -16,6 +16,9 @@ namespace eVerse.Models
         //property navigation to Verses
         public ICollection<Verse> Verses { get; set; } = new List<Verse>();
 
+        // Many-to-many: a song can belong to multiple books
+        public ICollection<Book> Books { get; set; } = new List<Book>();
+
         // Per-song settings
         public Setting? Setting { get; set; }
         public int? SettingId { get; set; }

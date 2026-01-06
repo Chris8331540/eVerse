@@ -9,6 +9,7 @@ namespace eVerse.Data
         public DbSet<Song> Songs { get; set; } = null!;
         public DbSet<Verse> SongVerses { get; set; } = null!;
         public DbSet<Setting> Settings { get; set; } = null!;
+        public DbSet<Book> Books { get; set; } = null!;
 
         // Configuración de conexión
         protected override void OnConfiguring(DbContextOptionsBuilder options)
@@ -36,6 +37,16 @@ namespace eVerse.Data
                 .WithOne(sg => sg.Song)
                 .HasForeignKey<Setting>(sg => sg.SongId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Many-to-many between Song and Book
+            modelBuilder.Entity<Song>()
+                .HasMany(s => s.Books)
+                .WithMany(b => b.Songs)
+                .UsingEntity<Dictionary<string, object>>(
+                    "BookSong",
+                    j => j.HasOne<Book>().WithMany().HasForeignKey("BookId").OnDelete(DeleteBehavior.Cascade),
+                    j => j.HasOne<Song>().WithMany().HasForeignKey("SongId").OnDelete(DeleteBehavior.Cascade)
+                );
 
             base.OnModelCreating(modelBuilder);
         }
