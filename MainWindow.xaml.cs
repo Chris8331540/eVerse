@@ -2,6 +2,7 @@
 using eVerse.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -46,6 +47,19 @@ namespace eVerse
 
             // Inicializar DP acorde al estado inicial
             IsSidebarExpanded = _sidebarExpanded;
+            
+            // Subscribe to VM property changes so we can update sidebar selection when CurrentView changes
+            if (DataContext is MainWindowViewModel vm)
+            {
+                vm.PropertyChanged += Vm_PropertyChanged;
+
+                // Initialize sidebar selection according to initial CurrentView
+                try
+                {
+                    UpdateSidebarSelection(vm.CurrentView);
+                }
+                catch { }
+            }
         }
         private void ToggleSidebar()
         {
@@ -96,6 +110,58 @@ namespace eVerse
                 SidebarItemHelper.SetIsSelected(b, true);
                 _selectedItem = b;
             }
+        }
+
+        private void Vm_PropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(MainWindowViewModel.CurrentView) && sender is MainWindowViewModel vm)
+            {
+                // Ensure UI thread
+                Dispatcher.Invoke(() => UpdateSidebarSelection(vm.CurrentView));
+            }
+        }
+
+        private void UpdateSidebarSelection(object? currentView)
+        {
+            // Determine which sidebar item corresponds to the current view
+            if (currentView is Views.CreateSongView)
+            {
+                SelectSidebarItem(CrearBorder);
+            }
+            else if (currentView is Views.SongListView)
+            {
+                SelectSidebarItem(ListaBorder);
+            }
+            else if (currentView is Views.EditSongListView)
+            {
+                SelectSidebarItem(EditListaBorder);
+            }
+            else if (currentView is Views.WebsocketConfigView)
+            {
+                SelectSidebarItem(WsConfigBorder);
+            }
+            else
+            {
+                // No matching view - clear selection
+                if (_selectedItem != null)
+                {
+                    SidebarItemHelper.SetIsSelected(_selectedItem, false);
+                    _selectedItem = null;
+                }
+            }
+        }
+
+        private void SelectSidebarItem(Border border)
+        {
+            if (border == null) return;
+
+            if (_selectedItem != null && _selectedItem != border)
+            {
+                SidebarItemHelper.SetIsSelected(_selectedItem, false);
+            }
+
+            SidebarItemHelper.SetIsSelected(border, true);
+            _selectedItem = border;
         }
 
         private void OpenNotebookMenu_Click(object sender, RoutedEventArgs e)
