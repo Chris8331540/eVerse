@@ -1,29 +1,32 @@
 using eVerse.Data;
 using eVerse.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Linq;
 
 namespace eVerse.Services
 {
  public class SettingsService
  {
- private readonly AppDbContext _context;
+ private readonly IDbContextFactory<AppDbContext> _contextFactory;
 
- public SettingsService(AppDbContext context)
+ public SettingsService(IDbContextFactory<AppDbContext> contextFactory)
  {
- _context = context;
+ _contextFactory = contextFactory;
  }
 
  public Setting? GetBySongId(int songId)
  {
- return _context.Settings.FirstOrDefault(s => s.SongId == songId);
+ using var context = _contextFactory.CreateDbContext();
+ return context.Settings.FirstOrDefault(s => s.SongId == songId);
  }
 
  public void UpsertSetting(Setting setting)
  {
- var existing = _context.Settings.FirstOrDefault(s => s.SongId == setting.SongId);
+ using var context = _contextFactory.CreateDbContext();
+ var existing = context.Settings.FirstOrDefault(s => s.SongId == setting.SongId);
  if (existing == null)
  {
- _context.Settings.Add(setting);
+ context.Settings.Add(setting);
  }
  else
  {
@@ -34,7 +37,7 @@ namespace eVerse.Services
  existing.FadeMs = setting.FadeMs;
  }
 
- _context.SaveChanges();
+ context.SaveChanges();
  }
  }
 }

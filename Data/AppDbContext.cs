@@ -10,6 +10,7 @@ namespace eVerse.Data
         public DbSet<Verse> SongVerses { get; set; } = null!;
         public DbSet<Setting> Settings { get; set; } = null!;
         public DbSet<Book> Books { get; set; } = null!;
+        public DbSet<AppConfig> AppConfigs { get; set; } = null!;
 
         // Configuración de conexión
         protected override void OnConfiguring(DbContextOptionsBuilder options)

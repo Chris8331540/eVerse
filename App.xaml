@@ -5,11 +5,19 @@
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
     <Application.Resources>
         <ResourceDictionary>
-            <SolidColorBrush x:Key="UIBrushBackground" Color="DarkSlateGray"/>
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
+            <SolidColorBrush x:Key="UIBrushBackground" Color="#1E1E1E"/>
+            <Style x:Key="MyWindowStyle" TargetType="Window">
+                <Setter Property="Background" Value="{StaticResource UIBrushBackground}" />
+                <Setter Property="FontFamily" Value="Segoe UI" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Foreground" Value="White" />
+                <!-- Más setters para estilo común -->
+            </Style>
+            
         </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -14,6 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using Wpf.Ui.Controls;
 using eVerse.Animations;
+using eVerse.Views;
 
 namespace eVerse
 {
@@ -95,6 +96,48 @@ namespace eVerse
                 SidebarItemHelper.SetIsSelected(b, true);
                 _selectedItem = b;
             }
+        }
+
+        private void OpenNotebookMenu_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new OpenBookWindow
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() == true && dialog.SelectedBook != null)
+            {
+                // After selecting book, persist is already done in the dialog.
+                // Now instruct VM to load songs for the chosen book.
+                if (DataContext is MainWindowViewModel vm)
+                {
+                    vm.LoadSongsForBook(dialog.SelectedBook.Id);
+                }
+            }
+        }
+
+        private void CreateNotebookMenu_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new CreateBookWindow
+            {
+                Owner = this
+            };
+
+            if (dialog.ShowDialog() == true && dialog.CreatedBook != null)
+            {
+                System.Windows.MessageBox.Show($"Cuaderno '{dialog.CreatedBook.Title}' creado correctamente.",
+                    "Cuadernos", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+            }
+        }
+
+        private void TextsMenu_Click(object sender, RoutedEventArgs e)
+        {
+            var dialog = new TextSettingsWindow
+            {
+                Owner = this
+            };
+
+            dialog.ShowDialog();
         }
     }
 }

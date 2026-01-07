@@ -1,17 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using eVerse.Data;
 using eVerse.Models;
 using eVerse.Services;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.IdentityModel.Tokens;
-using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Data;
 
@@ -72,7 +65,15 @@ namespace eVerse.ViewModels
             _projectionSettings = settings;
             _serviceProvider = serviceProvider;
 
-            LoadSongs();
+            // Load songs according to AppConfig last opened book if present
+
+            using var ctx = new AppDbContext();
+            var cfg = ctx.AppConfigs.FirstOrDefault();
+            if (cfg != null && cfg.LastOpenedBook > 0)
+            {
+                LoadSongsByBook(cfg.LastOpenedBook);
+            }
+
         }
 
         partial void OnSelectedSongChanged(Song? oldValue, Song? newValue)
@@ -112,13 +113,21 @@ namespace eVerse.ViewModels
             catch { }
         }
 
-        // Cargar canciones desde la BD
-        [RelayCommand]
-        private void LoadSongs()
+        //// Cargar canciones desde la BD
+        //[RelayCommand]
+        //private void LoadSongs()
+        //{
+        //    Songs = new ObservableCollection<Song>(_songService.GetAllSongs());
+        //    SongsView = CollectionViewSource.GetDefaultView(Songs);
+        //    SongsView.Filter = SongsFilter;
+        //}
+
+        public void LoadSongsByBook(int bookId)
         {
-            Songs = new ObservableCollection<Song>(_songService.GetAllSongs());
+            Songs = new ObservableCollection<Song>(_songService.GetSongsByBook(bookId));
             SongsView = CollectionViewSource.GetDefaultView(Songs);
             SongsView.Filter = SongsFilter;
+            SelectedSong = Songs.FirstOrDefault();
         }
 
         // Eliminar canción seleccionada
@@ -129,7 +138,12 @@ namespace eVerse.ViewModels
                 return;
 
             _songService.DeleteSong(SelectedSong.Id);
-            LoadSongs();
+            using var ctx = new AppDbContext();
+            var cfg = ctx.AppConfigs.FirstOrDefault();
+            if (cfg != null && cfg.LastOpenedBook > 0)
+            {
+                LoadSongsByBook(cfg.LastOpenedBook);
+            }
         }
 
         private bool CanDelete()
@@ -143,7 +157,7 @@ namespace eVerse.ViewModels
         {
             if (SelectedSong == null) return;
             if (SelectedSongVerses == null) SelectedSongVerses = new ObservableCollection<Verse>();
-            SelectedSongVerses.Add(new Verse { Text = string.Empty, Order = (SelectedSongVerses.Count +1) });
+            SelectedSongVerses.Add(new Verse { Text = string.Empty, Order = (SelectedSongVerses.Count + 1) });
         }
 
         // Eliminar estrofa visualmente (no persiste hasta guardar)
@@ -153,8 +167,8 @@ namespace eVerse.ViewModels
             if (SelectedSongVerses == null || verse == null) return;
             SelectedSongVerses.Remove(verse);
             // Recompute orders
-            for (int i =0; i < SelectedSongVerses.Count; i++)
-                SelectedSongVerses[i].Order = i +1;
+            for (int i = 0; i < SelectedSongVerses.Count; i++)
+                SelectedSongVerses[i].Order = i + 1;
         }
 
         [RelayCommand]
@@ -194,7 +208,12 @@ namespace eVerse.ViewModels
             _songService.UpdateSong(song);
 
             // Recargar la lista para reflejar cambios (opcional)
-            LoadSongs();
+            using var ctx = new AppDbContext();
+            var cfg = ctx.AppConfigs.FirstOrDefault();
+            if (cfg != null && cfg.LastOpenedBook > 0)
+            {
+                LoadSongsByBook(cfg.LastOpenedBook);
+            }
 
             // Mantener la selección en la canción guardada, si existe
             var kept = Songs.FirstOrDefault(s => s.Id == song.Id);

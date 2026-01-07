@@ -11,8 +11,8 @@ using eVerse.Data;
 namespace eVerse.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251215184237_addSettingsToSong")]
-    partial class addSettingsToSong
+    [Migration("20260107170226_mPruebaBook002")]
+    partial class mPruebaBook002
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -23,6 +23,38 @@ namespace eVerse.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("BookSong", b =>
+                {
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SongId")
+                        .HasColumnType("int");
+
+                    b.HasKey("BookId", "SongId");
+
+                    b.HasIndex("SongId");
+
+                    b.ToTable("BookSong");
+                });
+
+            modelBuilder.Entity("eVerse.Models.Book", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Books");
+                });
 
             modelBuilder.Entity("eVerse.Models.Setting", b =>
                 {
@@ -105,6 +137,21 @@ namespace eVerse.Migrations
                     b.HasIndex("SongId");
 
                     b.ToTable("SongVerses");
+                });
+
+            modelBuilder.Entity("BookSong", b =>
+                {
+                    b.HasOne("eVerse.Models.Book", null)
+                        .WithMany()
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("eVerse.Models.Song", null)
+                        .WithMany()
+                        .HasForeignKey("SongId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("eVerse.Models.Setting", b =>

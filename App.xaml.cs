@@ -20,8 +20,8 @@ namespace eVerse
         {
             var services = new ServiceCollection();
 
-            // Registrar DbContext
-            services.AddDbContext<AppDbContext>();
+            // Registrar DbContext factory
+            services.AddDbContextFactory<AppDbContext>();
 
             // Registrar servicios
             services.AddSingleton<SongService>();
@@ -53,7 +53,7 @@ namespace eVerse
 
             // Abrir la ventana principal
             var mainWindow = ServiceProvider.GetRequiredService<MainWindow>();
-            MainWindow.DataContext = ServiceProvider.GetRequiredService<MainWindowViewModel>();
+            mainWindow.DataContext = ServiceProvider.GetRequiredService<MainWindowViewModel>();
             mainWindow.Show();
 
             base.OnStartup(e);

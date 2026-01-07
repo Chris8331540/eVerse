@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
+using eVerse.Data;
 using Wpf.Ui.Input;
 
 namespace eVerse.ViewModels
@@ -54,6 +55,20 @@ namespace eVerse.ViewModels
             ResetToDefaultState();
         }
 
+        // Recalculate next SongNumber according to currently active Book (AppConfig)
+        public void RecalculateNextSongNumber()
+        {
+            try
+            {
+                var all = _songService.GetAllSongs(); // GetAllSongs is filtered to active book
+                SongNumber = (all != null && all.Count > 0) ? all.Max(s => s.SongNumber) + 1 : 1;
+            }
+            catch
+            {
+                SongNumber = 1;
+            }
+        }
+
         private void AddVerse()
         {
             Verses.Add(new VerseViewModel(new Verse()));
@@ -61,6 +76,67 @@ namespace eVerse.ViewModels
 
         private void SaveSong()
         {
+            // Ensure there is an active Book configured
+            int? activeBookId = null;
+            try
+            {
+                using var cfgCtx = new AppDbContext();
+                var cfg = cfgCtx.AppConfigs.FirstOrDefault();
+                if (cfg != null && cfg.LastOpenedBook > 0)
+                    activeBookId = cfg.LastOpenedBook;
+            }
+            catch { }
+
+            if (!activeBookId.HasValue)
+            {
+                var result = System.Windows.MessageBox.Show("No hay ningún cuaderno abierto. ¿Deseas crear uno ahora?", "Crear cuaderno", System.Windows.MessageBoxButton.YesNo, System.Windows.MessageBoxImage.Question);
+                if (result != System.Windows.MessageBoxResult.Yes)
+                    return;
+
+                // Open CreateBookWindow
+                var createDlg = new Views.CreateBookWindow();
+                createDlg.Owner = System.Windows.Application.Current?.MainWindow;
+                if (createDlg.ShowDialog() != true || createDlg.CreatedBook == null)
+                {
+                    // user cancelled
+                    return;
+                }
+
+                // Persist selection into AppConfig
+                try
+                {
+                    using var ctx = new AppDbContext();
+                    var cfg = ctx.AppConfigs.FirstOrDefault();
+                    if (cfg == null)
+                    {
+                        cfg = new Models.AppConfig { LastOpenedBook = createDlg.CreatedBook.Id };
+                        ctx.AppConfigs.Add(cfg);
+                    }
+                    else
+                    {
+                        cfg.LastOpenedBook = createDlg.CreatedBook.Id;
+                        ctx.AppConfigs.Update(cfg);
+                    }
+                    ctx.SaveChanges();
+
+                    activeBookId = createDlg.CreatedBook.Id;
+
+                    // Update main window VM indicator and load songs for the new book
+                    try
+                    {
+                        if (System.Windows.Application.Current?.MainWindow?.DataContext is ViewModels.MainWindowViewModel mwvm)
+                        {
+                            mwvm.LoadSongsForBook(createDlg.CreatedBook.Id);
+                        }
+                    }
+                    catch { }
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+
             // Validaciones
             if (SongNumber <=0)
             {
@@ -162,7 +238,27 @@ namespace eVerse.ViewModels
                 Verses = verses
             };
 
-            _songService.CreateSong(song);
+            // Persist song and assign to currently opened book (if any)
+            try
+            {
+                int? bookId = null;
+                try
+                {
+                    using var ctx = new AppDbContext();
+                    var cfg = ctx.AppConfigs.FirstOrDefault();
+                    if (cfg != null && cfg.LastOpenedBook > 0)
+                        bookId = cfg.LastOpenedBook;
+                }
+                catch { /* ignore DB read errors, fallback to null */ }
+
+                _songService.CreateSong(song, bookId);
+            }
+            catch
+            {
+                // fallback to create without book
+                _songService.CreateSong(song);
+            }
+
             ShowMessage?.Invoke("Canción creada correctamente.");
 
             // Reset view to initial state
@@ -211,22 +307,7 @@ namespace eVerse.ViewModels
             _editingSongId = null;
 
             // Recalculate next SongNumber
-            try
-            {
-                var all = _songService.GetAllSongs();
-                if (all != null && all.Count >0)
-                {
-                    SongNumber = all.Max(s => s.SongNumber) +1;
-                }
-                else
-                {
-                    SongNumber =1;
-                }
-            }
-            catch
-            {
-                SongNumber =1;
-            }
+            RecalculateNextSongNumber();
         }
 
         public event PropertyChangedEventHandler? PropertyChanged;
