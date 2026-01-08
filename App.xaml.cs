@@ -26,6 +26,7 @@ namespace eVerse
             // Registrar servicios
             services.AddSingleton<SongService>();
             services.AddSingleton<SettingsService>();
+            services.AddSingleton<AppConfigService>();
 
             // Create and register kestrel websocket service instance
             var kestrelWs = new KestrelWebSocketService(port:5000, token: "secret-token");

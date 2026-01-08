@@ -1,11 +1,6 @@
 ﻿using eVerse.Data;
 using eVerse.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace eVerse.Services
 {
@@ -43,38 +38,7 @@ namespace eVerse.Services
             context.SaveChanges();
         }
 
-        // Obtener todas las canciones
-        public List<Song> GetAllSongs()
-        {
-            try
-            {
-                using var context = _contextFactory.CreateDbContext();
-                var cfg = context.AppConfigs.FirstOrDefault();
-                if (cfg != null && cfg.LastOpenedBook > 0)
-                {
-                    var bookId = cfg.LastOpenedBook;
-                    // Query the join table "BookSong" to get song ids for the book
-                    var bookSongSet = context.Set<Dictionary<string, object>>("BookSong");
-                    var songIds = bookSongSet
-                        .Where(bs => EF.Property<int>(bs, "BookId") == bookId)
-                        .Select(bs => EF.Property<int>(bs, "SongId"))
-                        .ToList();
-
-                    return context.Songs
-                        .Include(s => s.Verses)
-                        .Where(s => songIds.Contains(s.Id))
-                        .ToList();
-                }
-            }
-            catch
-            {
-                // ignore and fallback to returning all songs
-            }
-
-            using var fallbackContext = _contextFactory.CreateDbContext();
-            return fallbackContext.Songs.Include(s => s.Verses).ToList();
-        }
-
+        // Obtener canciones por libro
         public List<Song> GetSongsByBook(int bookId)
         {
             using var context = _contextFactory.CreateDbContext();
@@ -111,6 +75,5 @@ namespace eVerse.Services
             }
         }
     }
-
 }
 

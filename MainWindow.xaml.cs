@@ -45,8 +45,9 @@ namespace eVerse
             _currentInstance = this;
 
             var projectionService = serviceProvider.GetRequiredService<ProjectionService>();
+            var appConfigService = serviceProvider.GetRequiredService<AppConfigService>();
 
-            DataContext = new MainWindowViewModel(serviceProvider, projectionService);
+            DataContext = new MainWindowViewModel(serviceProvider, projectionService, appConfigService);
 
             // Inicializar DP acorde al estado inicial
             IsSidebarExpanded = _sidebarExpanded;

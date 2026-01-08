@@ -1,50 +1,44 @@
-﻿using eVerse.Models;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using eVerse.Models;
 using eVerse.Services;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
-using eVerse.Data;
-using Wpf.Ui.Input;
 
 namespace eVerse.ViewModels
 {
-    public class CreateSongViewModel : INotifyPropertyChanged
+    public partial class CreateSongViewModel : ObservableObject
     {
         private readonly SongService _songService;
+        private readonly AppConfigService _appConfigService;
+        
         public ObservableCollection<VerseViewModel> Verses { get; set; }
 
+        [ObservableProperty]
         private string songName = string.Empty;
+
+        [ObservableProperty]
         private int songNumber;
+
         private int? _editingSongId; // null when creating new
 
-        public string SongName
-        {
-            get => songName;
-            set { songName = value; OnPropertyChanged(); }
-        }
-        public int SongNumber
-        {
-            get => songNumber;
-            set { songNumber = value; OnPropertyChanged(); }
-        }
-        public ICommand AddVerseCommand { get; }
-        public ICommand SaveSongCommand { get; }
-        public ICommand RemoveVerseCommand { get; }
+        public IRelayCommand AddVerseCommand { get; }
+        public IRelayCommand SaveSongCommand { get; }
+        public IRelayCommand<VerseViewModel> RemoveVerseCommand { get; }
 
         // Simple message display (OK)
         public Action<string>? ShowMessage { get; set; }
         // Confirmation dialog: should return true if user accepts
         public Func<string, bool>? AskConfirmation { get; set; }
 
-        public CreateSongViewModel(SongService songService)
+        public CreateSongViewModel(SongService songService, AppConfigService appConfigService)
         {
             _songService = songService;
-            // Por defecto agregamos1 bloque de estrofa
+            _appConfigService = appConfigService;
+            
+            // Por defecto agregamos 1 bloque de estrofa
             Verses = new ObservableCollection<VerseViewModel>
             {
-            new VerseViewModel(new Verse()) // Bloque inicial
+                new VerseViewModel() // Bloque inicial
             };
 
             AddVerseCommand = new RelayCommand(AddVerse);
@@ -60,8 +54,16 @@ namespace eVerse.ViewModels
         {
             try
             {
-                var all = _songService.GetAllSongs(); // GetAllSongs is filtered to active book
-                SongNumber = (all != null && all.Count > 0) ? all.Max(s => s.SongNumber) + 1 : 1;
+                var bookId = _appConfigService.GetLastOpenedBookId();
+                if (bookId.HasValue)
+                {
+                    var all = _songService.GetSongsByBook(bookId.Value);
+                    SongNumber = (all != null && all.Count > 0) ? all.Max(s => s.SongNumber) + 1 : 1;
+                }
+                else
+                {
+                    SongNumber = 1;
+                }
             }
             catch
             {
@@ -71,21 +73,13 @@ namespace eVerse.ViewModels
 
         private void AddVerse()
         {
-            Verses.Add(new VerseViewModel(new Verse()));
+            Verses.Add(new VerseViewModel());
         }
 
         private void SaveSong()
         {
             // Ensure there is an active Book configured
-            int? activeBookId = null;
-            try
-            {
-                using var cfgCtx = new AppDbContext();
-                var cfg = cfgCtx.AppConfigs.FirstOrDefault();
-                if (cfg != null && cfg.LastOpenedBook > 0)
-                    activeBookId = cfg.LastOpenedBook;
-            }
-            catch { }
+            int? activeBookId = _appConfigService.GetLastOpenedBookId();
 
             if (!activeBookId.HasValue)
             {
@@ -103,42 +97,22 @@ namespace eVerse.ViewModels
                 }
 
                 // Persist selection into AppConfig
+                _appConfigService.SetLastOpenedBookId(createDlg.CreatedBook.Id);
+                activeBookId = createDlg.CreatedBook.Id;
+
+                // Update main window VM indicator and load songs for the new book
                 try
                 {
-                    using var ctx = new AppDbContext();
-                    var cfg = ctx.AppConfigs.FirstOrDefault();
-                    if (cfg == null)
+                    if (System.Windows.Application.Current?.MainWindow?.DataContext is MainWindowViewModel mwvm)
                     {
-                        cfg = new Models.AppConfig { LastOpenedBook = createDlg.CreatedBook.Id };
-                        ctx.AppConfigs.Add(cfg);
+                        mwvm.LoadSongsForBook(createDlg.CreatedBook.Id);
                     }
-                    else
-                    {
-                        cfg.LastOpenedBook = createDlg.CreatedBook.Id;
-                        ctx.AppConfigs.Update(cfg);
-                    }
-                    ctx.SaveChanges();
-
-                    activeBookId = createDlg.CreatedBook.Id;
-
-                    // Update main window VM indicator and load songs for the new book
-                    try
-                    {
-                        if (System.Windows.Application.Current?.MainWindow?.DataContext is ViewModels.MainWindowViewModel mwvm)
-                        {
-                            mwvm.LoadSongsForBook(createDlg.CreatedBook.Id);
-                        }
-                    }
-                    catch { }
                 }
-                catch
-                {
-                    // ignore
-                }
+                catch { }
             }
 
             // Validaciones
-            if (SongNumber <=0)
+            if (SongNumber <= 0)
             {
                 ShowMessage?.Invoke("El número de canción debe ser un número positivo.");
                 return;
@@ -150,7 +124,7 @@ namespace eVerse.ViewModels
                 return;
             }
 
-            // Debe tener al menos1 estrofa no vacía
+            // Debe tener al menos 1 estrofa no vacía
             var hasNonEmptyVerse = Verses != null && Verses.Any(v => !string.IsNullOrWhiteSpace(v.Text));
             if (!hasNonEmptyVerse)
             {
@@ -160,15 +134,18 @@ namespace eVerse.ViewModels
 
             // Preparar lista de versos desde ViewModels
             var verses = this.Verses
-            .Select((vm, index) => new Verse
-            {
-                Text = vm.Text,
-                Order = index +1
-            })
-            .ToList();
+                .Select((vm, index) => new Verse
+                {
+                    Text = vm.Text,
+                    Order = index + 1
+                })
+                .ToList();
+
+            // Get songs from active book to check for conflicts
+            var songsInBook = _songService.GetSongsByBook(activeBookId!.Value);
 
             // Buscar conflicto por SongNumber
-            var existing = _songService.GetAllSongs().FirstOrDefault(s => s.SongNumber == this.SongNumber);
+            var existing = songsInBook.FirstOrDefault(s => s.SongNumber == this.SongNumber);
 
             if (existing != null)
             {
@@ -215,7 +192,7 @@ namespace eVerse.ViewModels
             // No conflict: if editing existing song, update it; else create new
             if (_editingSongId.HasValue)
             {
-                var toUpdate = _songService.GetAllSongs().FirstOrDefault(s => s.Id == _editingSongId.Value);
+                var toUpdate = songsInBook.FirstOrDefault(s => s.Id == _editingSongId.Value);
                 if (toUpdate != null)
                 {
                     toUpdate.Title = this.SongName;
@@ -238,26 +215,8 @@ namespace eVerse.ViewModels
                 Verses = verses
             };
 
-            // Persist song and assign to currently opened book (if any)
-            try
-            {
-                int? bookId = null;
-                try
-                {
-                    using var ctx = new AppDbContext();
-                    var cfg = ctx.AppConfigs.FirstOrDefault();
-                    if (cfg != null && cfg.LastOpenedBook > 0)
-                        bookId = cfg.LastOpenedBook;
-                }
-                catch { /* ignore DB read errors, fallback to null */ }
-
-                _songService.CreateSong(song, bookId);
-            }
-            catch
-            {
-                // fallback to create without book
-                _songService.CreateSong(song);
-            }
+            // Persist song and assign to currently opened book
+            _songService.CreateSong(song, activeBookId);
 
             ShowMessage?.Invoke("Canción creada correctamente.");
 
@@ -281,18 +240,18 @@ namespace eVerse.ViewModels
             // Insertar las estrofas cargadas desde la BD
             foreach (var verse in song.Verses.OrderBy(v => v.Order))
             {
-                Verses.Add(new VerseViewModel(new Verse())
+                Verses.Add(new VerseViewModel
                 {
                     Text = verse.Text
                 });
             }
 
-            // Si por algún motivo no hubiera estrofas, creamos al menos1 vacía
-            if (Verses.Count ==0)
+            // Si por algún motivo no hubiera estrofas, creamos al menos 1 vacía
+            if (Verses.Count == 0)
                 AddVerse();
         }
 
-        private void RemoveVerse(VerseViewModel verse)
+        private void RemoveVerse(VerseViewModel? verse)
         {
             if (verse != null)
                 Verses.Remove(verse);
@@ -303,16 +262,11 @@ namespace eVerse.ViewModels
             // Reset fields
             SongName = string.Empty;
             Verses.Clear();
-            Verses.Add(new VerseViewModel(new Verse()));
+            Verses.Add(new VerseViewModel());
             _editingSongId = null;
 
             // Recalculate next SongNumber
             RecalculateNextSongNumber();
         }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-            => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
-
 }

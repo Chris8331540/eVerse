@@ -1,17 +1,12 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using eVerse.Services;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
-using System.Windows.Input;
 
 namespace eVerse.ViewModels
 {
-    public class WebsocketConfigViewModel : INotifyPropertyChanged
+    public partial class WebsocketConfigViewModel : ObservableObject
     {
         private readonly IWebSocketService _webSocketService;
-
-        public ICommand StartCommand { get; }
-        public ICommand StopCommand { get; }
-        public ICommand CopyAddressCommand { get; }
 
         public string WebsocketAddress => _webSocketService.Address;
         public string IsRunningText => _webSocketService.IsRunning ? "En ejecucion" : "Detenido";
@@ -21,12 +16,30 @@ namespace eVerse.ViewModels
         public WebsocketConfigViewModel(IWebSocketService webSocketService)
         {
             _webSocketService = webSocketService;
-            StartCommand = new RelayCommand(() => { _webSocketService.Start(); Refresh(); }, () => !_webSocketService.IsRunning);
-            StopCommand = new RelayCommand(() => { _webSocketService.Stop(); Refresh(); }, () => _webSocketService.IsRunning);
-            CopyAddressCommand = new RelayCommand(() =>
-            {
-                try { System.Windows.Clipboard.SetText(WebsocketAddress); } catch { }
-            });
+        }
+
+        [RelayCommand(CanExecute = nameof(CanStart))]
+        private void Start()
+        {
+            _webSocketService.Start();
+            Refresh();
+        }
+
+        private bool CanStart() => !_webSocketService.IsRunning;
+
+        [RelayCommand(CanExecute = nameof(CanStop))]
+        private void Stop()
+        {
+            _webSocketService.Stop();
+            Refresh();
+        }
+
+        private bool CanStop() => _webSocketService.IsRunning;
+
+        [RelayCommand]
+        private void CopyAddress()
+        {
+            try { System.Windows.Clipboard.SetText(WebsocketAddress); } catch { }
         }
 
         private void Refresh()
@@ -35,12 +48,9 @@ namespace eVerse.ViewModels
             OnPropertyChanged(nameof(WebsocketAddress));
             OnPropertyChanged(nameof(MdnsPublishedText));
             OnPropertyChanged(nameof(LocalIp));
-            // Notify WPF to requery command CanExecute so buttons enable/disable update
-            System.Windows.Input.CommandManager.InvalidateRequerySuggested();
+            // Notify commands to requery CanExecute
+            StartCommand.NotifyCanExecuteChanged();
+            StopCommand.NotifyCanExecuteChanged();
         }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName] string? name = null)
-        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
     }
 }

@@ -1,5 +1,7 @@
 using eVerse.Data;
 using eVerse.Models;
+using eVerse.Services;
+using Microsoft.Extensions.DependencyInjection;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
@@ -9,6 +11,8 @@ namespace eVerse.Views
 {
     public partial class OpenBookWindow : Window
     {
+        private readonly AppConfigService _appConfigService;
+        
         public ObservableCollection<Book> Books { get; } = new();
         public Book? SelectedBook { get; private set; }
 
@@ -16,6 +20,7 @@ namespace eVerse.Views
         {
             InitializeComponent();
             DataContext = this;
+            _appConfigService = App.ServiceProvider.GetRequiredService<AppConfigService>();
             LoadBooks();
         }
 
@@ -43,20 +48,8 @@ namespace eVerse.Views
             SelectedBook = BooksList.SelectedItem as Book;
             if (SelectedBook != null)
             {
-                // Persist selected book id into AppConfig (single record)
-                using var ctx = new AppDbContext();
-                var cfg = ctx.AppConfigs.FirstOrDefault();
-                if (cfg == null)
-                {
-                    cfg = new AppConfig { LastOpenedBook = SelectedBook.Id };
-                    ctx.AppConfigs.Add(cfg);
-                }
-                else
-                {
-                    cfg.LastOpenedBook = SelectedBook.Id;
-                    ctx.AppConfigs.Update(cfg);
-                }
-                ctx.SaveChanges();
+                // Persist selected book id into AppConfig using service
+                _appConfigService.SetLastOpenedBookId(SelectedBook.Id);
 
                 DialogResult = true;
                 Close();

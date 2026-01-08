@@ -1,6 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using eVerse.Data;
 using eVerse.Models;
 using eVerse.Services;
 using System.Collections.ObjectModel;
@@ -14,6 +13,7 @@ namespace eVerse.ViewModels
     {
         private readonly ProjectionService _projectionService;
         private readonly ProjectionSettings _projectionSettings;
+        private readonly AppConfigService _appConfigService;
 
         // Exponer settings para binding
         public ProjectionSettings ProjectionSettings => _projectionSettings;
@@ -58,22 +58,20 @@ namespace eVerse.ViewModels
         "Segoe UI", "Arial", "Times New Roman", "Calibri", "Verdana"
     };
 
-        public SongListViewModel(SongService songService, ProjectionService projectionService, ProjectionSettings settings, IServiceProvider serviceProvider)
+        public SongListViewModel(SongService songService, ProjectionService projectionService, ProjectionSettings settings, IServiceProvider serviceProvider, AppConfigService appConfigService)
         {
             _songService = songService;
             _projectionService = projectionService;
             _projectionSettings = settings;
             _serviceProvider = serviceProvider;
+            _appConfigService = appConfigService;
 
             // Load songs according to AppConfig last opened book if present
-
-            using var ctx = new AppDbContext();
-            var cfg = ctx.AppConfigs.FirstOrDefault();
-            if (cfg != null && cfg.LastOpenedBook > 0)
+            var bookId = _appConfigService.GetLastOpenedBookId();
+            if (bookId.HasValue)
             {
-                LoadSongsByBook(cfg.LastOpenedBook);
+                LoadSongsByBook(bookId.Value);
             }
-
         }
 
         partial void OnSelectedSongChanged(Song? oldValue, Song? newValue)
@@ -138,11 +136,10 @@ namespace eVerse.ViewModels
                 return;
 
             _songService.DeleteSong(SelectedSong.Id);
-            using var ctx = new AppDbContext();
-            var cfg = ctx.AppConfigs.FirstOrDefault();
-            if (cfg != null && cfg.LastOpenedBook > 0)
+            var bookId = _appConfigService.GetLastOpenedBookId();
+            if (bookId.HasValue)
             {
-                LoadSongsByBook(cfg.LastOpenedBook);
+                LoadSongsByBook(bookId.Value);
             }
         }
 
@@ -178,13 +175,6 @@ namespace eVerse.ViewModels
             _projectionService.ShowProjection(verseText);
         }
 
-        // También puedes añadir comando para cerrar proyección
-        [RelayCommand]
-        private void CloseProjection()
-        {
-            _projectionService.CloseProjection();
-        }
-
         // Nuevo: comando para guardar cambios en una canción. Recibe un objeto Song que contiene el título y las estrofas (Verses).
         [RelayCommand]
         private void SaveSong(Song? song)
@@ -208,11 +198,10 @@ namespace eVerse.ViewModels
             _songService.UpdateSong(song);
 
             // Recargar la lista para reflejar cambios (opcional)
-            using var ctx = new AppDbContext();
-            var cfg = ctx.AppConfigs.FirstOrDefault();
-            if (cfg != null && cfg.LastOpenedBook > 0)
+            var bookId = _appConfigService.GetLastOpenedBookId();
+            if (bookId.HasValue)
             {
-                LoadSongsByBook(cfg.LastOpenedBook);
+                LoadSongsByBook(bookId.Value);
             }
 
             // Mantener la selección en la canción guardada, si existe

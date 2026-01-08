@@ -1,9 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using eVerse.Data;
 using eVerse.Services;
 using eVerse.Views;
-using eVerse;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Input;
 
@@ -13,6 +11,7 @@ namespace eVerse.ViewModels
     {
         private readonly IServiceProvider _service;
         private readonly ProjectionService _projectionService;
+        private readonly AppConfigService _appConfigService;
 
         public ICommand ShowCreateSongCommand { get; }
         public ICommand ShowSongListCommand { get; }
@@ -46,10 +45,11 @@ namespace eVerse.ViewModels
                 WindowTitle = $"eVerse - {newValue}";
         }
 
-        public MainWindowViewModel(IServiceProvider service, ProjectionService projectionService)
+        public MainWindowViewModel(IServiceProvider service, ProjectionService projectionService, AppConfigService appConfigService)
         {
             _service = service;
             _projectionService = projectionService;
+            _appConfigService = appConfigService;
 
             ShowCreateSongCommand = new RelayCommand(ShowCreateSong);
             ShowSongListCommand = new RelayCommand(ShowSongList);
@@ -60,30 +60,21 @@ namespace eVerse.ViewModels
             ShowCreateSong();
 
             // Initialize active book title from AppConfig if present
-            try
+            var book = _appConfigService.GetLastOpenedBook();
+            if (book != null)
             {
-                using var ctx = new AppDbContext();
-                var cfg = ctx.AppConfigs.FirstOrDefault();
-                if (cfg != null && cfg.LastOpenedBook > 0)
+                ActiveBookTitle = book.Title;
+                IsBookSelected = true;
+                // Notify CreateSongViewModel to recalculate next song number if it's the current view's VM
+                try
                 {
-                    var book = ctx.Books.Find(cfg.LastOpenedBook);
-                    if (book != null)
+                    if (CurrentView is CreateSongView csv && csv.DataContext is CreateSongViewModel cvm)
                     {
-                        ActiveBookTitle = book.Title;
-                        IsBookSelected = true;
-                        // Notify CreateSongViewModel to recalculate next song number if it's the current view's VM
-                        try
-                        {
-                            if (CurrentView is CreateSongView csv && csv.DataContext is CreateSongViewModel cvm)
-                            {
-                                cvm.RecalculateNextSongNumber();
-                            }
-                        }
-                        catch { }
+                        cvm.RecalculateNextSongNumber();
                     }
                 }
+                catch { }
             }
-            catch { }
         }
 
         private void ShowCreateSong()
@@ -115,22 +106,17 @@ namespace eVerse.ViewModels
                 }
 
                 // Update active book indicator
-                try
+                var loadedBook = _appConfigService.GetLastOpenedBook();
+                if (loadedBook != null)
                 {
-                    using var ctx = new AppDbContext();
-                    var book = ctx.Books.Find(bookId);
-                    if (book != null)
-                    {
-                        ActiveBookTitle = book.Title;
-                        IsBookSelected = true;
-                    }
-                    else
-                    {
-                        ActiveBookTitle = string.Empty;
-                        IsBookSelected = false;
-                    }
+                    ActiveBookTitle = loadedBook.Title;
+                    IsBookSelected = true;
                 }
-                catch { }
+                else
+                {
+                    ActiveBookTitle = string.Empty;
+                    IsBookSelected = false;
+                }
 
                 CurrentView = targetView;
                 MainWindow.RequestSidebarSelectionUpdate(CurrentView);
