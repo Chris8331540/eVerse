@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using eVerse.Data;
 using eVerse.Services;
 using eVerse.Views;
+using eVerse;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows.Input;
 
@@ -103,6 +104,7 @@ namespace eVerse.ViewModels
             {
                 targetView = existingView;
                 existingVm.LoadSongsByBook(bookId);
+                MainWindow.RequestSidebarSelectionUpdate(CurrentView);
             }
             else
             {
@@ -129,8 +131,10 @@ namespace eVerse.ViewModels
                     }
                 }
                 catch { }
-                
+
                 CurrentView = targetView;
+                MainWindow.RequestSidebarSelectionUpdate(CurrentView);
+
             }
 
             // Always notify all CreateSongViewModel instances to recalculate next song number

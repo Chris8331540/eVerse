@@ -26,6 +26,7 @@ namespace eVerse
     {
         private bool _sidebarExpanded = true;
         private Border _selectedItem;
+        private static MainWindow? _currentInstance;
 
         // Nueva DP para que XAML pueda enlazarse al estado del sidebar
         public static readonly DependencyProperty IsSidebarExpandedProperty =
@@ -40,6 +41,8 @@ namespace eVerse
         public MainWindow(IServiceProvider serviceProvider)
         {
             InitializeComponent();
+
+            _currentInstance = this;
 
             var projectionService = serviceProvider.GetRequiredService<ProjectionService>();
 
@@ -60,6 +63,11 @@ namespace eVerse
                 }
                 catch { }
             }
+        }
+
+        internal static void RequestSidebarSelectionUpdate(object? currentView)
+        {
+            _currentInstance?.Dispatcher.Invoke(() => _currentInstance.UpdateSidebarSelection(currentView));
         }
         private void ToggleSidebar()
         {
