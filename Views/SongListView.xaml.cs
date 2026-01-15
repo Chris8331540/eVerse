@@ -27,5 +27,6 @@ namespace eVerse.Views
             InitializeComponent();
             DataContext = App.ServiceProvider.GetRequiredService<SongListViewModel>();
         }
+
     }
 }

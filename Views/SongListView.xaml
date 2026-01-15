@@ -18,6 +18,8 @@
             <!-- Configuración general arriba -->
             <RowDefinition Height="*"/>
             <!-- Contenido principal -->
+            <RowDefinition Height="Auto"/>
+            <!-- Lista auxiliar de proyección -->
         </Grid.RowDefinitions>
 
 
@@ -49,6 +51,19 @@
                         <ListBox ItemsSource="{Binding Songs}"
                                  SelectedItem="{Binding SelectedSong}"
                                  SelectionMode="Single">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="ContextMenu">
+                                        <Setter.Value>
+                                            <ContextMenu>
+                                                <MenuItem Header="Añadir a la lista de proyección"
+                                                          Command="{Binding DataContext.AddToProjectionListCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                            </ContextMenu>
+                                        </Setter.Value>
+                                    </Setter>
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal" Margin="5">
@@ -126,6 +141,61 @@
 
             </ui:Card>
 
+        </Grid>
+
+        <!-- LISTA AUXILIAR DE PROYECCIÓN -->
+        <Grid Grid.Row="2" Margin="0 20 0 0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <ui:TextBlock Text="Lista de proyección"
+                          FontSize="16"
+                          FontWeight="SemiBold"
+                          Margin="0 0 0 8" />
+
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          MaxHeight="240">
+                <ListBox ItemsSource="{Binding ProjectionQueue}"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         BorderThickness="0">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="5" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Button Margin="5"
+                                    Padding="10"
+                                    Command="{Binding DataContext.SelectProjectionSongCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}"
+                                    Background="Transparent"
+                                    BorderBrush="{x:Null}">
+                                <Button.ContextMenu>
+                                    <ContextMenu>
+                                        <MenuItem Header="Quitar de la lista de proyección"
+                                                  Command="{Binding PlacementTarget.DataContext.RemoveFromProjectionListCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                    </ContextMenu>
+                                </Button.ContextMenu>
+                                <ui:Card Padding="10">
+                                    <StackPanel>
+                                        <ui:TextBlock Text="{Binding SongNumber}"
+                                                      FontWeight="Bold"
+                                                      Margin="0 0 0 4" />
+                                        <ui:TextBlock Text="{Binding Title}"
+                                                      TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </ui:Card>
+                            </Button>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </ScrollViewer>
         </Grid>
 
     </Grid>

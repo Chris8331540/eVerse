@@ -36,6 +36,10 @@ namespace eVerse.ViewModels
         [ObservableProperty]
         private ObservableCollection<Song> songs = new();
 
+        // Lista auxiliar de proyección
+        
+        private ObservableCollection<Song> ProjectionQueue { get; } = new();
+
         // Texto actualmente proyectado (para resaltar verso en UI)
         [ObservableProperty]
         private string projectedText = string.Empty;
@@ -83,6 +87,40 @@ namespace eVerse.ViewModels
                 _projectionService.ProjectedTextChanged += text => ProjectedText = text ?? string.Empty;
             }
             catch { }
+        }
+
+        [RelayCommand]
+        private void AddToProjectionList(Song? song)
+        {
+            if (song == null)
+                return;
+
+            if (!ProjectionQueue.Any(s => s.Id == song.Id))
+            {
+                ProjectionQueue.Add(song);
+            }
+        }
+
+        [RelayCommand]
+        private void RemoveFromProjectionList(Song? song)
+        {
+            if (song == null)
+                return;
+
+            var existing = ProjectionQueue.FirstOrDefault(s => s.Id == song.Id);
+            if (existing != null)
+            {
+                ProjectionQueue.Remove(existing);
+            }
+        }
+
+        [RelayCommand]
+        private void SelectProjectionSong(Song? song)
+        {
+            if (song == null)
+                return;
+
+            SelectedSong = song;
         }
 
         partial void OnSelectedSongChanged(Song? oldValue, Song? newValue)
