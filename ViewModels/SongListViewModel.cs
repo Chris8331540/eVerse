@@ -36,6 +36,10 @@ namespace eVerse.ViewModels
         [ObservableProperty]
         private ObservableCollection<Song> songs = new();
 
+        // Texto actualmente proyectado (para resaltar verso en UI)
+        [ObservableProperty]
+        private string projectedText = string.Empty;
+
         // Canción seleccionada en la UI
         [ObservableProperty]
         private Song? selectedSong;
@@ -72,6 +76,13 @@ namespace eVerse.ViewModels
             {
                 LoadSongsByBook(bookId.Value);
             }
+
+            // Subscribe to projection text changes to update UI highlight
+            try
+            {
+                _projectionService.ProjectedTextChanged += text => ProjectedText = text ?? string.Empty;
+            }
+            catch { }
         }
 
         partial void OnSelectedSongChanged(Song? oldValue, Song? newValue)
@@ -101,6 +112,20 @@ namespace eVerse.ViewModels
                 // Copy title into editable buffer
                 SelectedSongTitle = newValue.Title ?? string.Empty;
             }
+
+            // If a projection is currently showing some text, automatically show the first verse of the newly selected song
+            try
+            {
+                if (newValue != null && _projectionService.CurrentProjectedText != null && _projectionService.CurrentProjectedText.Length > 0)
+                {
+                    var first = newValue.Verses?.OrderBy(v => v.Order).FirstOrDefault()?.Text;
+                    if (!string.IsNullOrWhiteSpace(first))
+                    {
+                        _projectionService.ShowProjection(first);
+                    }
+                }
+            }
+            catch { }
 
             // Force command CanExecute re-evaluation so AddVerse button updates enabled state
             try
@@ -172,7 +197,25 @@ namespace eVerse.ViewModels
         private void ShowVerse(string verseText)
         {
             if (string.IsNullOrWhiteSpace(verseText)) return;
-            _projectionService.ShowProjection(verseText);
+
+            try
+            {
+                var current = _projectionService.CurrentProjectedText ?? string.Empty;
+                if (string.Equals(current, verseText, StringComparison.Ordinal))
+                {
+                    // If the clicked verse is currently projected, clear the text (leave window open)
+                    _projectionService.ClearProjectedText();
+                }
+                else
+                {
+                    _projectionService.ShowProjection(verseText);
+                }
+            }
+            catch
+            {
+                // fallback to show projection
+                _projectionService.ShowProjection(verseText);
+            }
         }
 
         // Nuevo: comando para guardar cambios en una canción. Recibe un objeto Song que contiene el título y las estrofas (Verses).

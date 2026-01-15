@@ -39,6 +39,21 @@ namespace eVerse.Views
             ApplySettings();
         }
 
+        /// <summary>
+        /// Reset visual state of the projection controls (stop animations, clear text, restore opacity).
+        /// </summary>
+        public void ResetState()
+        {
+            try
+            {
+                // Stop any running opacity animations
+                ProjectedText.BeginAnimation(OpacityProperty, null);
+                ProjectedText.Text = string.Empty;
+                ProjectedText.Opacity = 1.0;
+            }
+            catch { }
+        }
+
         private void ApplySettings()
         {
             // Aplicar familia y tamaño (Viewbox escala, pero dejamos referencia)

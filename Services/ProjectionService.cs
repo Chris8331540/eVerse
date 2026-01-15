@@ -13,6 +13,8 @@ namespace eVerse.Services
     public class ProjectionService
     {
         private ProjectionWindow? _window;
+        private string? _currentText;
+        public event Action<string?>? ProjectedTextChanged;
         private readonly ProjectionSettings _settings;
         private readonly IWebSocketService _webSocketService;
 
@@ -40,6 +42,10 @@ namespace eVerse.Services
                 _window!.SetProjectedText(text);
                 _window!.Activate(); // lleva al frente
 
+                // track current text
+                _currentText = text;
+                try { ProjectedTextChanged?.Invoke(_currentText); } catch { }
+
                 // Broadcast to websocket clients
                 try
                 {
@@ -49,6 +55,33 @@ namespace eVerse.Services
             });
         }
 
+        /// <summary>
+        /// Clears the projected text but keeps the projection window open (black background).
+        /// </summary>
+        public void ClearProjectedText()
+        {
+            System.Windows.Application.Current.Dispatcher.Invoke(() =>
+            {
+                EnsureWindowCreated();
+                // set empty text
+                _window!.SetProjectedText(string.Empty);
+                _currentText = string.Empty;
+                try { ProjectedTextChanged?.Invoke(_currentText); } catch { }
+
+                // Broadcast empty text to websocket clients
+                try
+                {
+                    _webSocketService.BroadcastText(string.Empty);
+                }
+                catch { }
+            });
+        }
+
+        /// <summary>
+        /// Returns the currently projected text, or null/empty if none.
+        /// </summary>
+        public string? CurrentProjectedText => _currentText;
+
         // Cierra la ventana si está abierta
         public void CloseProjection()
         {
@@ -56,8 +89,12 @@ namespace eVerse.Services
             {
                 if (_window != null)
                 {
+                    // Reset window visual state before closing
+                    try { _window.ResetState(); } catch { }
                     _window.Close();
                     _window = null;
+                    _currentText = null;
+                    try { ProjectedTextChanged?.Invoke(_currentText); } catch { }
                 }
             });
         }
@@ -113,6 +150,9 @@ namespace eVerse.Services
             // 🔥 Cuando la ventana se cierre manualmente o por ESC
             _window.Closed += (_, __) =>
             {
+                // Clear state so subsequent clicks behave as expected
+                _currentText = null;
+                try { ProjectedTextChanged?.Invoke(_currentText); } catch { }
                 _window = null;  // permite recrearla
             };
         }
