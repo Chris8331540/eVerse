@@ -12,7 +12,7 @@
         <conv:TextEqualityConverter x:Key="TextEqualityConverter" />
     </UserControl.Resources>
 
-    <Grid Margin="20">
+    <Grid Margin="20" VerticalAlignment="Top">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <!-- Configuración general arriba -->
@@ -20,46 +20,9 @@
             <!-- Contenido principal -->
         </Grid.RowDefinitions>
 
-        <!-- FILA CONFIGURACIÓN COMPLETA -->
-        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="0 0 0 10">
-
-            <ui:ToggleSwitch IsChecked="{Binding ProjectionSettings.UseFade}"
-                             Content="Fade"
-                             Margin="5" VerticalAlignment="Center"/>
-
-            <StackPanel Orientation="Horizontal" Margin="5" VerticalAlignment="Center">
-                <ui:TextBlock Text="Fade ms:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <Slider Minimum="0"
-                        Maximum="2000"
-                        Value="{Binding ProjectionSettings.FadeMs}"
-                        Width="110"
-                        VerticalAlignment="Center"/>
-                <ui:TextBlock Text="{Binding ProjectionSettings.FadeMs}"
-                              Margin="8,0,0,0"
-                              VerticalAlignment="Center"/>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Margin="5" VerticalAlignment="Center">
-                <ui:TextBlock Text="Fuente:" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <ComboBox ItemsSource="{Binding AvailableFonts}"
-                          SelectedItem="{Binding ProjectionSettings.FontFamily}"
-                          Width="140"/>
-            </StackPanel>
-
-            <StackPanel Orientation="Horizontal" Margin="5" VerticalAlignment="Center">
-                <ui:TextBlock Text="Tamaño (px):" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                <TextBox Text="{Binding ProjectionSettings.FontSize, UpdateSourceTrigger=PropertyChanged}"
-                         Width="60"/>
-                <ui:ToggleSwitch IsChecked="{Binding ProjectionSettings.AutoFit}"
-                                 Content="Ajuste automático"
-                                 Margin="8,0,0,0"
-                                 VerticalAlignment="Center"/>
-            </StackPanel>
-
-        </StackPanel>
 
         <!-- CONTENIDO PRINCIPAL -->
-        <Grid Grid.Row="1">
+        <Grid Grid.Row="1" VerticalAlignment="Top">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="250"/>
                 <ColumnDefinition Width="*"/>
