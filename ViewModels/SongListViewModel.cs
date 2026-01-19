@@ -38,7 +38,7 @@ namespace eVerse.ViewModels
 
         // Lista auxiliar de proyección
         
-        private ObservableCollection<Song> ProjectionQueue { get; } = new();
+        public ObservableCollection<Song> ProjectionQueue { get; } = new();
 
         // Texto actualmente proyectado (para resaltar verso en UI)
         [ObservableProperty]
