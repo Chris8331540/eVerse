@@ -34,7 +34,7 @@
             </Grid.ColumnDefinitions>
 
             <!-- COLUMNA IZQUIERDA: Buscador + Lista -->
-            <ui:Card Padding="10" Margin="0 0 15 0" Grid.Column="0">
+            <ui:Card Padding="10" Margin="0 0 15 0" Grid.Column="0" VerticalAlignment="Top" VerticalContentAlignment="Top">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
@@ -84,7 +84,7 @@
             </ui:Card>
 
             <!-- COLUMNA DERECHA: Estrofas -->
-            <ui:Card Grid.Column="1" Padding="15">
+            <ui:Card Grid.Column="1" Padding="15" VerticalAlignment="Top">
 
                 <Grid>
                     <Grid.RowDefinitions>
